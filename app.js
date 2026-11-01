@@ -231,6 +231,8 @@ function rajzol(){
 }
 
 /* ---------- indulás ---------- */
+// ?r=1 borra lo guardado (solo para probar cómo lo ve un cliente nuevo).
+if (/[?&]r=1/.test(location.search)) { kulcsok = {}; kesz = {}; ir(TAR_KESZ, kesz); }
 var linkbol = kulcsokLinkbol(location.search + location.hash);
 Object.keys(linkbol).forEach(function(id){ kulcsok[id] = linkbol[id]; });
 app.innerHTML = '<p style="text-align:center;color:var(--halv);padding:60px 0">Betöltés…</p>';

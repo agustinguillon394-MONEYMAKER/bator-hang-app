@@ -1,5 +1,5 @@
 // Primero la red (para que siempre llegue lo nuevo); sin señal, lo guardado.
-var CACHE = 'bator-hang-202611011924';
+var CACHE = 'bator-hang-202611011937';
 self.addEventListener('install', function(e){ self.skipWaiting(); });
 self.addEventListener('activate', function(e){
   e.waitUntil(caches.keys().then(function(ks){
