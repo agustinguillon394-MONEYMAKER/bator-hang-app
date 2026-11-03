@@ -134,3 +134,34 @@ main{max-width:640px;margin:0 auto;padding:18px var(--jobb) calc(40px + env(safe
 .tanus input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid rgba(216,169,60,.5);background:rgba(0,0,0,.25);color:var(--szoveg);font:inherit;margin-bottom:10px}
 .tanus-kep{display:block;width:100%;height:auto;border-radius:10px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 @media (prefers-reduced-motion:reduce){.legzes .kor{transition:none}}
+/* Belenézek, ajánló, előtte-utána (03/11) */
+.termek .gomb.belenez{margin-bottom:6px;margin-top:auto}
+.termek .gomb.belenez + .gomb{margin-top:0}
+.belul-kep{display:block;width:46%;max-width:200px;margin:0 auto 14px;border-radius:10px}
+.belul-cim{margin:6px 0 8px;font-weight:700;color:var(--arany2)}
+.belul{margin:0 0 18px;padding-left:22px}
+.belul li{margin-bottom:9px}
+.belul li b{display:block;color:var(--szoveg);font-weight:600}
+.belul li span{font-size:13px;color:var(--halv)}
+.ajanlo{display:flex;gap:12px;border:1px solid var(--arany);background:rgba(216,169,60,.08);border-radius:14px;padding:12px;margin:10px 0 14px}
+.ajanlo img{flex:0 0 74px;width:74px;height:auto;align-self:flex-start;border-radius:8px}
+.ajanlo small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--arany)}
+.ajanlo b{display:block;color:var(--arany2);margin:2px 0 4px}
+.ajanlo p{margin:0 0 10px;font-size:14px;color:var(--halv)}
+.ajanlo-gomb{display:flex;gap:8px}
+.ajanlo-gomb .gomb{padding:10px 8px;font-size:14px}
+.hang{border:1px solid var(--vonal);background:var(--kartya);border-radius:14px;padding:14px;margin-bottom:22px}
+.hang-fej{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.hang-jel{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:rgba(216,169,60,.15);font-size:20px}
+.hang-fej b{display:block;color:var(--arany2)}
+.hang-fej span{font-size:13px;color:var(--halv)}
+.hang .figy,#telepit .figy{margin-bottom:14px}
+.hang-sor{margin-bottom:12px}
+.hang-sor small{display:block;font-size:12px;color:var(--halv);margin-bottom:4px}
+.hang-sor audio{width:100%}
+.hang-ujra{display:block;margin:10px auto 0;background:none;border:0;color:var(--halv);text-decoration:underline;font:inherit;font-size:13px}
+.hang-titok{margin:12px 0 0;font-size:12px;color:var(--halv);text-align:center}
+.felv{display:flex;align-items:center;justify-content:center;gap:10px;margin:26px 0 22px;font-size:15px;color:var(--halv)}
+.felv b{font-size:40px;color:var(--szoveg);font-family:'Barlow Condensed',sans-serif}
+.felv-pont{width:16px;height:16px;border-radius:50%;background:#E5483A;animation:felvPont 1s ease-in-out infinite}
+@keyframes felvPont{50%{opacity:.25}}

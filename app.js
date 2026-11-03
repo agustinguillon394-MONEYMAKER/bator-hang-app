@@ -150,6 +150,121 @@ function ujKulcsok(talalt, kezi){
   });
 }
 
+/* ---------- «Belenézek»: mi van benne + a következő lépés a megfelelő pillanatban (03/11) ---------- */
+function termek(id){ return K.extrak.concat(K.kieg).filter(function(p){ return p.id === id; })[0]; }
+function belenez(p){
+  var t = lapTest(p.cim);
+  t.appendChild(el('<img class="belul-kep" src="' + p.kep + '" alt="">'));
+  t.appendChild(el('<p class="sos-be">' + esc(p.sor) + '</p>'));
+  var ol = el('<ol class="belul"></ol>');
+  p.belul.forEach(function(k){ ol.appendChild(el('<li><b>' + esc(k[0]) + '</b>' + (k[1] ? '<span>' + esc(k[1]) + '</span>' : '') + '</li>')); });
+  t.appendChild(el('<p class="belul-cim">Ez van benne:</p>')); t.appendChild(ol);
+  t.appendChild(el('<a class="gomb voros" href="' + p.vasar + '" target="_blank" rel="noopener">Megszerzem</a>'));
+  lapNyit('telepit');
+}
+// melyik nap után mit ajánlunk (az utazás és az autó: ami ott hiányzik)
+var UTANA = {
+  '1': ['b4', 'Hamarosan neked kell beszélned? Ezzel 20 perc alatt összerakod.'],
+  '2': ['o2', 'A lámpaláz gyakorlással múlik el. Gyakorolj éles helyzeteket a telefonodon, bármikor.'],
+  '4': ['o4', 'Most, hogy figyelsz a kiejtésedre, szabadulj meg az „ööö”-ktől is.'],
+  '6': ['o1', 'Ha a történeteid eladnak, a szavaidból bevétel is lehet.'],
+  '7': ['o3', 'Megvan a hangod. Most használd arra, hogy kapcsolatokat építs.']
+};
+function ajanlo(id, szoveg){
+  var p = termek(id);
+  if (!p || tartalom[id] || !p.vasar) return null;
+  var d = el('<div class="ajanlo"><img src="' + p.kep + '" alt=""><div><small>A következő lépés</small><b>' + esc(p.cim) + '</b><p>' + esc(szoveg) + '</p><div class="ajanlo-gomb"></div></div></div>');
+  var g = d.querySelector('.ajanlo-gomb');
+  if (p.belul) { var bn = el('<button class="gomb masod">Belenézek</button>'); bn.addEventListener('click', function(){ belenez(p); }); g.appendChild(bn); }
+  g.appendChild(el('<a class="gomb voros" href="' + p.vasar + '" target="_blank" rel="noopener">Megszerzem</a>'));
+  return d;
+}
+
+/* ---------- előtte és utána: hangfelvétel az 1. és a 7. napon (03/11) ---------- */
+var HANG_DB = null;
+function hangDb(){
+  if (HANG_DB) return HANG_DB;
+  HANG_DB = new Promise(function(ok, hiba){
+    var r = indexedDB.open('bh-hang', 1);
+    r.onupgradeneeded = function(){ r.result.createObjectStore('felvetel'); };
+    r.onsuccess = function(){ ok(r.result); }; r.onerror = function(){ hiba(r.error); };
+  });
+  return HANG_DB;
+}
+function hangOlvas(kulcs){
+  return hangDb().then(function(db){ return new Promise(function(ok){
+    var q = db.transaction('felvetel').objectStore('felvetel').get(kulcs); q.onsuccess = function(){ ok(q.result || null); }; q.onerror = function(){ ok(null); };
+  }); }).catch(function(){ return null; });
+}
+function hangIr(kulcs, ertek){
+  return hangDb().then(function(db){ return new Promise(function(ok, hiba){
+    var tx = db.transaction('felvetel', 'readwrite'); tx.objectStore('felvetel').put(ertek, kulcs); tx.oncomplete = ok; tx.onerror = function(){ hiba(tx.error); };
+  }); });
+}
+function datumHu(ms){ var n = new Date(ms); return n.getFullYear() + '. ' + HONAP[n.getMonth()] + ' ' + n.getDate() + '.'; }
+function hangKartya(){
+  var d = el('<div class="hang"><div class="hang-fej"><span class="hang-jel">&#127908;</span><div><b>Előtte és utána</b><span>Hallgasd meg a saját változásodat.</span></div></div><div class="hang-test"><p class="sos-be">Betöltés…</p></div></div>');
+  var t = d.querySelector('.hang-test');
+  if (!window.indexedDB || !window.MediaRecorder || !navigator.mediaDevices) {
+    t.innerHTML = '<p class="sos-be">Ezen a böngészőn nem tudsz hangot felvenni. Nyisd meg az appot Chrome-ban vagy Safariban.</p>';
+    return d;
+  }
+  Promise.all([hangOlvas('elotte'), hangOlvas('utana')]).then(function(f){
+    var elo = f[0], uta = f[1];
+    t.innerHTML = '';
+    function lejatszo(cim, rec){ return el('<div class="hang-sor"><small>' + cim + ' · ' + datumHu(rec.ido) + '</small><audio controls preload="metadata" src="' + URL.createObjectURL(rec.blob) + '"></audio></div>'); }
+    function gomb(szoveg, kulcs, osztaly){ var g = el('<button class="gomb ' + (osztaly || '') + '">' + szoveg + '</button>'); g.addEventListener('click', function(){ felvesz(kulcs); }); return g; }
+    if (!elo) {
+      t.appendChild(el('<p class="sos-be">Ma vedd fel magad egy percben, a 7. napon pedig még egyszer. A végén egymás után meghallgatod a kettőt, és hallod, mennyit változtál.</p>'));
+      t.appendChild(el('<div class="figy">A feladat: mutatkozz be egy percben. Ki vagy, mivel foglalkozol, és mit vársz ettől a héttől?</div>'));
+      t.appendChild(gomb('&#9679; Felveszem az elsőt', 'elotte', 'voros'));
+    } else if (!uta) {
+      t.appendChild(lejatszo('Előtte', elo));
+      t.appendChild(el('<p class="sos-be">A 7. napon vedd fel ugyanezt még egyszer: ugyanaz a bemutatkozás, egy perc.</p>'));
+      t.appendChild(gomb('&#9679; Felveszem a másodikat', 'utana', 'voros'));
+      var u = el('<button class="hang-ujra">Újra felveszem az elsőt</button>'); u.addEventListener('click', function(){ felvesz('elotte'); }); t.appendChild(u);
+    } else {
+      t.appendChild(lejatszo('Előtte', elo)); t.appendChild(lejatszo('Utána', uta));
+      t.appendChild(el('<p class="sos-be"><b>Hallod a különbséget?</b> Ezt a változást te csináltad.</p>'));
+      var a = ajanlo('o4', 'Hallod még az „ööö”-ket? Öt nap alatt csendre cseréled őket.'); if (a) t.appendChild(a);
+      var u2 = el('<button class="hang-ujra">Újra felveszem a másodikat</button>'); u2.addEventListener('click', function(){ felvesz('utana'); }); t.appendChild(u2);
+    }
+    t.appendChild(el('<p class="hang-titok">A felvételeid csak a telefonodon maradnak, senki más nem hallja őket.</p>'));
+  });
+  return d;
+}
+function felvesz(kulcs){
+  var t = lapTest(kulcs === 'elotte' ? 'Az első felvétel' : 'A második felvétel');
+  t.appendChild(el('<div class="figy">Mutatkozz be egy percben. Ki vagy, mivel foglalkozol, és mit vársz ettől a héttől?</div>'));
+  var ora = el('<div class="felv"><span class="felv-pont"></span><b>0:00</b><span>/ 1:00</span></div>');
+  var stop = el('<button class="gomb voros">Leállítom</button>');
+  t.appendChild(ora); t.appendChild(stop);
+  lapNyit('telepit');
+  var tipus = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].filter(function(x){ return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(x); })[0];
+  navigator.mediaDevices.getUserMedia({audio: true}).then(function(folyam){
+    var rec = new MediaRecorder(folyam, tipus ? {mimeType: tipus} : undefined), darabok = [], kezd = Date.now(), idozito;
+    rec.ondataavailable = function(e){ if (e.data && e.data.size) darabok.push(e.data); };
+    rec.onstop = function(){
+      clearInterval(idozito); folyam.getTracks().forEach(function(s){ s.stop(); });
+      var blob = new Blob(darabok, {type: rec.mimeType || tipus || 'audio/webm'});
+      hangIr(kulcs, {blob: blob, ido: Date.now()}).then(function(){
+        uzen(kulcs === 'elotte' ? 'Elmentve. A 7. napon találkozunk!' : 'Elmentve. Hallgasd meg a kettőt egymás után!');
+        history.state && history.state.lap ? history.back() : lapZar(); rajzol();
+      }, function(){ uzen('Nem sikerült elmenteni. Próbáld újra.'); });
+    };
+    rec.start(1000);
+    idozito = setInterval(function(){
+      var mp = Math.floor((Date.now() - kezd) / 1000);
+      ora.querySelector('b').textContent = Math.floor(mp / 60) + ':' + ('0' + mp % 60).slice(-2);
+      if (mp >= 60 && rec.state === 'recording') rec.stop();
+    }, 250);
+    stop.addEventListener('click', function(){ if (rec.state === 'recording') rec.stop(); });
+    document.querySelectorAll('#telepit [data-zar]').forEach(function(b){ b.addEventListener('click', function(){ if (rec.state === 'recording') { darabok = []; rec.onstop = function(){ clearInterval(idozito); folyam.getTracks().forEach(function(s){ s.stop(); }); }; rec.stop(); } }, {once: true}); });
+  }, function(){
+    t.innerHTML = '<p class="sos-be">Nem kaptunk hozzáférést a mikrofonhoz. Engedélyezd a mikrofont a böngésző beállításaiban, és próbáld újra.</p>';
+  });
+}
+
 /* ---------- SOS: négyzetes légzés + mentőanyagok (03/11) ---------- */
 function lapTest(cim){
   document.querySelector('#telepit .lap-fej b').textContent = cim;
@@ -242,6 +357,10 @@ function tanusitvany(nev, osszes_db){
         t.appendChild(m);
       }
       t.appendChild(el('<p class="sos-be" style="margin-top:16px">Gratulálunk! Ezt a hetet te csináltad végig.</p>'));
+      var kov = [['o2', 'Ne álljon meg itt: gyakorolj tovább éles helyzeteket a telefonodon, bármikor.'],
+                 ['o3', 'Megvan a hangod. Most használd arra, hogy kapcsolatokat építs.'],
+                 ['o5', 'Készen állsz a következő színpadra: a kamerára.']];
+      for (var i = 0; i < kov.length; i++) { var a = ajanlo(kov[i][0], kov[i][1]); if (a) { t.appendChild(a); break; } }
     }, 'image/png');
   });
 }
@@ -263,6 +382,11 @@ function termekKartya(p){
     });
     tt.appendChild(g);
   } else if (p.vasar) {
+    if (p.belul) {
+      var bn = el('<button class="gomb masod belenez">Belenézek</button>');
+      bn.addEventListener('click', function(){ belenez(p); });
+      tt.appendChild(bn);
+    }
     tt.appendChild(el('<a class="gomb voros" href="' + p.vasar + '" target="_blank" rel="noopener">Megszerzem</a>'));
   } else {
     tt.appendChild(el('<button class="gomb masod" disabled>Hamarosan</button>'));
@@ -296,6 +420,7 @@ function rajzol(){
   var sos = el('<button class="sos-sav"><span class="sos-jel">SOS</span><span><b>Mindjárt beszélnem kell</b><span>Egy perc légzés és a mentőmondatok</span></span><span class="nyil">&#8250;</span></button>');
   sos.addEventListener('click', function(){ sosNyit(fo); });
   app.appendChild(sos);
+  app.appendChild(hangKartya());
 
   if (!telepitve()) {
     var s = el('<button class="tel-sav"><span><b>Tedd ki a telefonodra</b><span>Így egy koppintással eléred, mint egy alkalmazást.</span></span><span class="nyil">&#8250;</span></button>');
@@ -304,7 +429,7 @@ function rajzol(){
   }
 
   app.appendChild(el('<div class="szakasz"><h2>A programod</h2><p>15 videólecke magyarul, 7 napra beosztva.</p></div>'));
-  var elsoNyitott = false;
+  var elsoNyitott = false, utolsoHely = null;
   fo.napok.forEach(function(n){
     var mind = n.elemek.every(function(e){ return kesz[e.id]; });
     var nyitva = !mind && !elsoNyitott; if (nyitva) elsoNyitott = true;
@@ -314,7 +439,10 @@ function rajzol(){
     var ul = d.querySelector('ul');
     n.elemek.forEach(function(e){ var li = document.createElement('li'); li.appendChild(elemGomb(e)); ul.appendChild(li); });
     app.appendChild(d);
+    // a legutóbb befejezett nap ajánlata (csak egy, és csak ha még nincs meg neki)
+    if (mind && UTANA[n.szam]) { var a = ajanlo(UTANA[n.szam][0], UTANA[n.szam][1]); if (a) utolsoHely = [d, a]; }
   });
+  if (utolsoHely) utolsoHely[0].after(utolsoHely[1]);
 
   app.appendChild(tanusitvanyKartya(megnezett, osszes.length));
 
