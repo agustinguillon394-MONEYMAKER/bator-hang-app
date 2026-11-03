@@ -165,3 +165,8 @@ main{max-width:640px;margin:0 auto;padding:18px var(--jobb) calc(40px + env(safe
 .felv b{font-size:40px;color:var(--szoveg);font-family:'Barlow Condensed',sans-serif}
 .felv-pont{width:16px;height:16px;border-radius:50%;background:#E5483A;animation:felvPont 1s ease-in-out infinite}
 @keyframes felvPont{50%{opacity:.25}}
+/* precio solo de la app (03/11) */
+.akcio-jel{display:inline-block;margin-left:4px;padding:1px 6px;border-radius:6px;background:#fff;color:var(--voros);font-size:12px;font-weight:800}
+.akcio-sor{display:inline-block;padding:3px 8px;border-radius:7px;background:#E5483A;color:#fff;font-size:12px;font-weight:700;margin-bottom:6px}
+.termek .kep .akcio-sor{position:absolute;left:8px;bottom:8px;margin:0}
+.sos-be .akcio-sor{display:table;margin-bottom:8px}

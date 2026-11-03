@@ -151,15 +151,18 @@ function ujKulcsok(talalt, kezi){
 }
 
 /* ---------- «Belenézek»: mi van benne + a következő lépés a megfelelő pillanatban (03/11) ---------- */
+function vasarLink(p){ return p.akcio ? p.akcio.vasar : p.vasar; }
+function akcioJel(p){ return p.akcio ? ' <span class="akcio-jel">−' + p.akcio.szazalek + '%</span>' : ''; }
+function akcioSor(p){ return p.akcio ? '<span class="akcio-sor">−' + p.akcio.szazalek + '% csak az appban</span>' : ''; }
 function termek(id){ return K.extrak.concat(K.kieg).filter(function(p){ return p.id === id; })[0]; }
 function belenez(p){
   var t = lapTest(p.cim);
   t.appendChild(el('<img class="belul-kep" src="' + p.kep + '" alt="">'));
-  t.appendChild(el('<p class="sos-be">' + esc(p.sor) + '</p>'));
+  t.appendChild(el('<p class="sos-be">' + akcioSor(p) + esc(p.sor) + '</p>'));
   var ol = el('<ol class="belul"></ol>');
   p.belul.forEach(function(k){ ol.appendChild(el('<li><b>' + esc(k[0]) + '</b>' + (k[1] ? '<span>' + esc(k[1]) + '</span>' : '') + '</li>')); });
   t.appendChild(el('<p class="belul-cim">Ez van benne:</p>')); t.appendChild(ol);
-  t.appendChild(el('<a class="gomb voros" href="' + p.vasar + '" target="_blank" rel="noopener">Megszerzem</a>'));
+  t.appendChild(el('<a class="gomb voros" href="' + vasarLink(p) + '" target="_blank" rel="noopener">Megszerzem' + akcioJel(p) + '</a>'));
   lapNyit('telepit');
 }
 // melyik nap után mit ajánlunk (az utazás és az autó: ami ott hiányzik)
@@ -176,7 +179,7 @@ function ajanlo(id, szoveg){
   var d = el('<div class="ajanlo"><img src="' + p.kep + '" alt=""><div><small>A következő lépés</small><b>' + esc(p.cim) + '</b><p>' + esc(szoveg) + '</p><div class="ajanlo-gomb"></div></div></div>');
   var g = d.querySelector('.ajanlo-gomb');
   if (p.belul) { var bn = el('<button class="gomb masod">Belenézek</button>'); bn.addEventListener('click', function(){ belenez(p); }); g.appendChild(bn); }
-  g.appendChild(el('<a class="gomb voros" href="' + p.vasar + '" target="_blank" rel="noopener">Megszerzem</a>'));
+  g.appendChild(el('<a class="gomb voros" href="' + vasarLink(p) + '" target="_blank" rel="noopener">Megszerzem' + akcioJel(p) + '</a>'));
   return d;
 }
 
@@ -369,7 +372,7 @@ function tanusitvany(nev, osszes_db){
 function termekKartya(p){
   var nyitott = !!tartalom[p.id];
   var d = el('<div class="termek' + (nyitott ? '' : ' zart') + '"><div class="kep"><img src="' + p.kep + '" alt="" loading="lazy" width="600" height="800">' +
-    '<span class="cimke">' + (nyitott ? 'A tiéd' : 'Zárolva') + '</span>' + (nyitott ? '' : '<span class="lakat"><i>' + LAKAT + '</i></span>') + '</div>' +
+    '<span class="cimke">' + (nyitott ? 'A tiéd' : 'Zárolva') + '</span>' + (nyitott ? '' : akcioSor(p)) + (nyitott ? '' : '<span class="lakat"><i>' + LAKAT + '</i></span>') + '</div>' +
     '<div class="tt"><b>' + esc(p.cim) + '</b><p>' + esc(p.sor) + '</p></div></div>');
   var tt = d.querySelector('.tt');
   if (nyitott && !tartalom[p.id].elemek.length) {
@@ -387,7 +390,7 @@ function termekKartya(p){
       bn.addEventListener('click', function(){ belenez(p); });
       tt.appendChild(bn);
     }
-    tt.appendChild(el('<a class="gomb voros" href="' + p.vasar + '" target="_blank" rel="noopener">Megszerzem</a>'));
+    tt.appendChild(el('<a class="gomb voros" href="' + vasarLink(p) + '" target="_blank" rel="noopener">Megszerzem' + akcioJel(p) + '</a>'));
   } else {
     tt.appendChild(el('<button class="gomb masod" disabled>Hamarosan</button>'));
   }
