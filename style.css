@@ -110,3 +110,27 @@ main{max-width:640px;margin:0 auto;padding:18px var(--jobb) calc(40px + env(safe
 
 @media (hover:hover){.elem:hover,.gomb:hover{filter:brightness(1.08)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* SOS y tanúsítvány (03/11) */
+.sos-sav{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid #C0392B;background:rgba(192,57,43,.16);border-radius:14px;padding:12px 14px;margin-bottom:12px;color:inherit;font:inherit;cursor:pointer}
+.sos-sav b{display:block;color:#FFD9D2}
+.sos-sav span{font-size:13px;color:var(--halv)}
+.sos-sav .nyil{margin-left:auto;font-size:22px;color:#E06B5C}
+.sos-jel{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#C0392B;color:#fff !important;font-weight:800;font-size:13px !important;letter-spacing:.04em}
+.sos-be{margin:0 0 14px;color:var(--halv)}
+.legzes{display:grid;place-items:center;height:250px;margin:6px 0 18px}
+.legzes .kor{width:130px;height:130px;border-radius:50%;display:grid;place-content:center;text-align:center;background:radial-gradient(circle,rgba(216,169,60,.35),rgba(216,169,60,.08));border:2px solid var(--arany);transition:transform 4s linear}
+.legzes .kor b{font-size:44px;line-height:1;color:var(--arany2)}
+.legzes .kor span{font-size:14px;color:var(--szoveg);margin-top:4px}
+.legzes .kor.be{transform:scale(1.65)}
+.legzes .kor.tart{transform:scale(1.65);transition:none}
+.legzes .kor.ki{transform:scale(1)}
+.legzes .kor.pihen{transform:scale(1);transition:none}
+.tanus{display:flex;gap:12px;border:1px solid var(--arany);background:linear-gradient(135deg,rgba(216,169,60,.16),rgba(216,169,60,.04));border-radius:14px;padding:14px;margin:18px 0 6px}
+.tanus.zart{opacity:.8;border-style:dashed}
+.tanus-jel{flex:0 0 auto;font-size:26px;color:var(--arany);line-height:1.1}
+.tanus b{display:block;color:var(--arany2)}
+.tanus p{margin:4px 0 10px;font-size:14px;color:var(--halv)}
+.tanus.zart p{margin-bottom:0}
+.tanus input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid rgba(216,169,60,.5);background:rgba(0,0,0,.25);color:var(--szoveg);font:inherit;margin-bottom:10px}
+.tanus-kep{display:block;width:100%;height:auto;border-radius:10px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+@media (prefers-reduced-motion:reduce){.legzes .kor{transition:none}}

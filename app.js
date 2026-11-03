@@ -150,6 +150,102 @@ function ujKulcsok(talalt, kezi){
   });
 }
 
+/* ---------- SOS: négyzetes légzés + mentőanyagok (03/11) ---------- */
+function lapTest(cim){
+  document.querySelector('#telepit .lap-fej b').textContent = cim;
+  var t = document.getElementById('telepit-test'); t.innerHTML = ''; return t;
+}
+function sosNyit(fo){
+  var t = lapTest('SOS: hamarosan beszélsz');
+  t.appendChild(el('<p class="sos-be">Csináld végig velem: négyzetes légzés, három kör, kevesebb mint egy perc.</p>'));
+  var kor = el('<div class="legzes"><div class="kor"><b>4</b><span>Indulhatunk?</span></div></div>');
+  var gomb = el('<button class="gomb voros">Indítom</button>');
+  t.appendChild(kor); t.appendChild(gomb);
+  var FAZIS = [['Szívd be', 'be'], ['Tartsd bent', 'tart'], ['Fújd ki', 'ki'], ['Pihenj', 'pihen']];
+  var szam = kor.querySelector('b'), felirat = kor.querySelector('span'), k = kor.querySelector('.kor');
+  gomb.addEventListener('click', function(){
+    gomb.disabled = true; gomb.textContent = 'Lélegezz velem…';
+    var lepes = 0, ossz = 3 * 4 * 4;
+    (function tik(){
+      if (document.getElementById('telepit').hidden) return;
+      if (lepes >= ossz) {
+        k.className = 'kor'; szam.textContent = '✓'; felirat.textContent = 'Kész';
+        gomb.disabled = false; gomb.textContent = 'Még egyszer';
+        uzen('Vállak le, talp a földön. Most mondd ki az első mondatodat.');
+        return;
+      }
+      var f = FAZIS[Math.floor(lepes / 4) % 4];
+      k.className = 'kor ' + f[1]; felirat.textContent = f[0]; szam.textContent = 4 - lepes % 4;
+      lepes++; setTimeout(tik, 1000);
+    })();
+  });
+  t.appendChild(el('<p class="sos-be" style="margin-top:22px">Ha kell még:</p>'));
+  fo.anyagok.filter(function(e){ return /Lámpaláz|Mit mondj/.test(e.cim); }).forEach(function(e){ t.appendChild(elemGomb(e)); });
+  lapNyit('telepit');
+}
+
+/* ---------- tanúsítvány a 15. videó után (03/11) ---------- */
+var HONAP = ['január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december'];
+function tanusitvanyKartya(kesz_db, osszes_db){
+  if (kesz_db < osszes_db) {
+    return el('<div class="tanus zart"><span class="tanus-jel">&#9733;</span><div><b>Névre szóló tanúsítvány</b>' +
+      '<p>Ha mind a ' + osszes_db + ' videót késznek jelölöd, itt megkapod. Még ' + (osszes_db - kesz_db) + ' van hátra.</p></div></div>');
+  }
+  var d = el('<div class="tanus"><span class="tanus-jel">&#9733;</span><div><b>Végigcsináltad a 7 napot!</b>' +
+    '<p>Írd be a neved, és elkészítjük a tanúsítványodat.</p>' +
+    '<input type="text" autocomplete="name" maxlength="40" placeholder="A neved">' +
+    '<button class="gomb">Elkészítem a tanúsítványt</button></div></div>');
+  var inp = d.querySelector('input'); inp.value = olvas('bh-nev', '');
+  d.querySelector('button').addEventListener('click', function(){
+    var nev = inp.value.trim();
+    if (!nev) { uzen('Írd be a neved.'); inp.focus(); return; }
+    ir('bh-nev', nev); tanusitvany(nev, osszes_db);
+  });
+  return d;
+}
+function tanusitvany(nev, osszes_db){
+  var t = lapTest('A tanúsítványod');
+  t.appendChild(el('<p class="sos-be">Készül…</p>'));
+  lapNyit('telepit');
+  var betuk = document.fonts ? Promise.all(['800 60px "Barlow Condensed"', '600 30px Inter', '400 30px Inter'].map(function(f){ return document.fonts.load(f); })) : Promise.resolve();
+  betuk.catch(function(){}).then(function(){
+    var W = 1600, H = 1130, c = document.createElement('canvas'); c.width = W; c.height = H;
+    var x = c.getContext('2d'), ARANY = '#D8A93C';
+    var g = x.createRadialGradient(W / 2, 0, 80, W / 2, H / 2, W * .75); g.addColorStop(0, '#3A1418'); g.addColorStop(1, '#16110F');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.strokeStyle = ARANY; x.lineWidth = 6; x.strokeRect(40, 40, W - 80, H - 80);
+    x.lineWidth = 2; x.strokeRect(62, 62, W - 124, H - 124);
+    x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+    function sor(szoveg, font, szin, y){ x.font = font; x.fillStyle = szin; x.fillText(szoveg, W / 2, y); }
+    sor('BÁTOR HANG · 7 NAPOS PROGRAM', '600 30px Inter', ARANY, 170);
+    sor('TANÚSÍTVÁNY', '800 130px "Barlow Condensed"', '#FFFFFF', 320);
+    sor('Ez a tanúsítvány igazolja, hogy', '400 34px Inter', '#E8DCCB', 420);
+    var meret = 110; x.font = '800 ' + meret + 'px "Barlow Condensed"';
+    while (x.measureText(nev).width > W - 260 && meret > 50) { meret -= 6; x.font = '800 ' + meret + 'px "Barlow Condensed"'; }
+    sor(nev, '800 ' + meret + 'px "Barlow Condensed"', ARANY, 560);
+    x.fillStyle = ARANY; x.fillRect(W / 2 - 260, 600, 520, 3);
+    sor('elvégezte a Bátor Hang 7 napos programját:', '400 34px Inter', '#E8DCCB', 680);
+    sor(osszes_db + ' videólecke és 7 nap gyakorlás a magabiztos beszédért.', '400 34px Inter', '#E8DCCB', 730);
+    var n = new Date();
+    sor(n.getFullYear() + '. ' + HONAP[n.getMonth()] + ' ' + n.getDate() + '.', '600 32px Inter', '#FFFFFF', 880);
+    sor('★ ★ ★', '400 34px Inter', ARANY, 960);
+    c.toBlob(function(blob){
+      var url = URL.createObjectURL(blob), fajl = 'Bator Hang tanusitvany.png';
+      t.innerHTML = '';
+      t.appendChild(el('<img class="tanus-kep" alt="A tanúsítványod" src="' + url + '">'));
+      var le = el('<a class="gomb" download="' + fajl + '" href="' + url + '">Letöltöm</a>');
+      t.appendChild(le);
+      var f = window.File ? new File([blob], fajl, {type: 'image/png'}) : null;
+      if (f && navigator.canShare && navigator.canShare({files: [f]})) {
+        var m = el('<button class="gomb masod" style="margin-top:10px">Megosztom</button>');
+        m.addEventListener('click', function(){ navigator.share({files: [f], title: 'Bátor Hang tanúsítvány'}).catch(function(){}); });
+        t.appendChild(m);
+      }
+      t.appendChild(el('<p class="sos-be" style="margin-top:16px">Gratulálunk! Ezt a hetet te csináltad végig.</p>'));
+    }, 'image/png');
+  });
+}
+
 /* ---------- rajzolás ---------- */
 function termekKartya(p){
   var nyitott = !!tartalom[p.id];
@@ -197,6 +293,10 @@ function rajzol(){
     '<p>Kezdd az 1. nappal, nézd meg a videót, aztán csináld meg a munkafüzet hozzá tartozó részét. Ennyi a mai feladat.</p>' +
     '<div class="halad"><i style="width:' + szazalek + '%"></i></div><div class="halad-szam">' + megnezett + ' / ' + osszes.length + ' videó kész</div></section>'));
 
+  var sos = el('<button class="sos-sav"><span class="sos-jel">SOS</span><span><b>Mindjárt beszélnem kell</b><span>Egy perc légzés és a mentőmondatok</span></span><span class="nyil">&#8250;</span></button>');
+  sos.addEventListener('click', function(){ sosNyit(fo); });
+  app.appendChild(sos);
+
   if (!telepitve()) {
     var s = el('<button class="tel-sav"><span><b>Tedd ki a telefonodra</b><span>Így egy koppintással eléred, mint egy alkalmazást.</span></span><span class="nyil">&#8250;</span></button>');
     s.addEventListener('click', function(){ document.querySelector('#telepit .lap-fej b').textContent = 'Tedd ki a telefonodra'; utmutato(iphone() ? 'ios' : 'and'); lapNyit('telepit'); });
@@ -215,6 +315,8 @@ function rajzol(){
     n.elemek.forEach(function(e){ var li = document.createElement('li'); li.appendChild(elemGomb(e)); ul.appendChild(li); });
     app.appendChild(d);
   });
+
+  app.appendChild(tanusitvanyKartya(megnezett, osszes.length));
 
   app.appendChild(el('<div class="szakasz"><h2>Munkafüzet és bónuszok</h2><p>Nyisd meg, vagy töltsd le a telefonodra.</p></div>'));
   fo.anyagok.forEach(function(e){ app.appendChild(elemGomb(e)); });
